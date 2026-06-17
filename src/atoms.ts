@@ -78,10 +78,16 @@ export const StreamingActiveAtom = atom<boolean>(false);
 export const StreamIntervalAtom = atom<number>(3000);
 
 export interface GasSafeFormData {
+  activePad: 'cp12' | 'regp65' | 'regp55';
   applianceMake: string;
   applianceModel: string;
+  applianceLocation: string;
   operatingPressure: string;
+  operatingPressureMbar: string;
+  gasRate: string;
   flueIntegrityPass: boolean;
+  spillageTestPass: boolean;
+  flueReversalPass: boolean;
   combustionCoPpm: string;
   combustionCo2Percent: string;
   safetyDeviceCorrect: boolean;
@@ -90,15 +96,33 @@ export interface GasSafeFormData {
   tightnessPass: boolean;
   engineerName: string;
   engineerLicense: string;
+  companyName: string;
+  companyAddress: string;
+  landlordName: string;
+  landlordAddress: string;
+  tenantName: string;
+  tenantAddress: string;
   comments: string;
   technicianActionRequired: boolean;
+  
+  // Warning Advice fields (REGP55)
+  warningSeverity: 'AR' | 'ID' | 'N/A'; // AR = At Risk, ID = Immediately Dangerous
+  warningStickerAffixed: boolean;
+  gasSupplyIsolated: boolean;
+  customerSignatureName: string;
 }
 
 export const GasSafeFormAtom = atom<GasSafeFormData>({
+  activePad: 'cp12',
   applianceMake: 'Worcester Bosch',
   applianceModel: 'Greenstar 30i',
+  applianceLocation: 'Kitchen (North Wall)',
   operatingPressure: '1.4',
+  operatingPressureMbar: '20.5',
+  gasRate: '2.85 m³/h',
   flueIntegrityPass: true,
+  spillageTestPass: true,
+  flueReversalPass: true,
   combustionCoPpm: '8',
   combustionCo2Percent: '9.1',
   safetyDeviceCorrect: true,
@@ -107,7 +131,17 @@ export const GasSafeFormAtom = atom<GasSafeFormData>({
   tightnessPass: true,
   engineerName: 'Rihards Mantejs',
   engineerLicense: 'GASSAFE-788291',
-  comments: 'All gas pressures stable. Ventilation clear.',
+  companyName: 'Pathway Gas Specialists Ltd',
+  companyAddress: 'Unit 4, Olympic Industrial Estate, Wembley, London',
+  landlordName: 'John McArthur Properties',
+  landlordAddress: '15 High Street, Kensington, London, W8 5NP',
+  tenantName: 'Sarah Jenkins',
+  tenantAddress: 'Flat 3B, 24 Oakwood Gardens, London, NW10 2PS',
+  comments: 'Annual boiler safety inspection completed. Flue gases analyzed at full load. Combustions within safe levels. Operating pressure correct at 1.4 bar.',
   technicianActionRequired: false,
+  warningSeverity: 'N/A',
+  warningStickerAffixed: false,
+  gasSupplyIsolated: false,
+  customerSignatureName: 'S. Jenkins',
 });
 

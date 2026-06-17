@@ -395,21 +395,53 @@ Format your final reply strictly as a JSON array under markdown code block:
         // Auto-fill Gas Safe Form from response fields
         const checklist = parsed.gas_safe_checklist || parsed.checklist || parsed;
         if (checklist && typeof checklist === 'object' && !Array.isArray(checklist)) {
-          setGasSafeForm((prev) => ({
-            ...prev,
-            applianceMake: checklist.applianceMake || checklist.make || prev.applianceMake,
-            applianceModel: checklist.applianceModel || checklist.model || prev.applianceModel,
-            operatingPressure: checklist.operatingPressure !== undefined ? String(checklist.operatingPressure) : prev.operatingPressure,
-            flueIntegrityPass: checklist.flueIntegrityPass !== undefined ? Boolean(checklist.flueIntegrityPass) : prev.flueIntegrityPass,
-            combustionCoPpm: checklist.combustionCoPpm !== undefined ? String(checklist.combustionCoPpm) : prev.combustionCoPpm,
-            combustionCo2Percent: checklist.combustionCo2Percent !== undefined ? String(checklist.combustionCo2Percent) : prev.combustionCo2Percent,
-            safetyDeviceCorrect: checklist.safetyDeviceCorrect !== undefined ? Boolean(checklist.safetyDeviceCorrect) : prev.safetyDeviceCorrect,
-            ventilationSatisfactory: checklist.ventilationSatisfactory !== undefined ? Boolean(checklist.ventilationSatisfactory) : prev.ventilationSatisfactory,
-            visualPass: checklist.visualPass !== undefined ? Boolean(checklist.visualPass) : prev.visualPass,
-            tightnessPass: checklist.tightnessPass !== undefined ? Boolean(checklist.tightnessPass) : prev.tightnessPass,
-            technicianActionRequired: checklist.technicianActionRequired !== undefined ? Boolean(checklist.technicianActionRequired) : prev.technicianActionRequired,
-            comments: checklist.comments || checklist.notes || prev.comments,
-          }));
+          setGasSafeForm((prev) => {
+            const calculatedMake = checklist.applianceMake || checklist.make || prev.applianceMake;
+            const calculatedModel = checklist.applianceModel || checklist.model || prev.applianceModel;
+            const calculatedPressure = checklist.operatingPressure !== undefined ? String(checklist.operatingPressure) : prev.operatingPressure;
+            const flIntegrity = checklist.flueIntegrityPass !== undefined ? Boolean(checklist.flueIntegrityPass) : prev.flueIntegrityPass;
+            const coPpm = checklist.combustionCoPpm !== undefined ? String(checklist.combustionCoPpm) : prev.combustionCoPpm;
+            const co2Percent = checklist.combustionCo2Percent !== undefined ? String(checklist.combustionCo2Percent) : prev.combustionCo2Percent;
+            const safDev = checklist.safetyDeviceCorrect !== undefined ? Boolean(checklist.safetyDeviceCorrect) : prev.safetyDeviceCorrect;
+            const ventSatis = checklist.ventilationSatisfactory !== undefined ? Boolean(checklist.ventilationSatisfactory) : prev.ventilationSatisfactory;
+            const visPass = checklist.visualPass !== undefined ? Boolean(checklist.visualPass) : prev.visualPass;
+            const tightPass = checklist.tightnessPass !== undefined ? Boolean(checklist.tightnessPass) : prev.tightnessPass;
+            
+            // Check for spillage and reversal
+            const spillPass = checklist.spillageTestPass !== undefined ? Boolean(checklist.spillageTestPass) : prev.spillageTestPass;
+            const revPass = checklist.flueReversalPass !== undefined ? Boolean(checklist.flueReversalPass) : prev.flueReversalPass;
+            
+            // Critical defect warning determination
+            const failsSafety = !flIntegrity || !safDev || !ventSatis || !visPass || !tightPass || !spillPass || !revPass;
+            const declaredDanger = checklist.technicianActionRequired !== undefined ? Boolean(checklist.technicianActionRequired) : (failsSafety || prev.technicianActionRequired);
+            
+            // If safety checks fail, auto set activePad to REGP55 Warning Advice as a high-value field automation helper!
+            const padToSelect = declaredDanger ? 'regp55' : prev.activePad;
+            const calculatedSeverity = declaredDanger ? 'ID' : 'N/A';
+
+            return {
+              ...prev,
+              activePad: padToSelect,
+              applianceMake: calculatedMake,
+              applianceModel: calculatedModel,
+              applianceLocation: checklist.applianceLocation || checklist.location || prev.applianceLocation,
+              operatingPressure: calculatedPressure,
+              operatingPressureMbar: checklist.operatingPressureMbar || checklist.inletPressure || prev.operatingPressureMbar,
+              gasRate: checklist.gasRate || checklist.consumptionRate || prev.gasRate,
+              flueIntegrityPass: flIntegrity,
+              spillageTestPass: spillPass,
+              flueReversalPass: revPass,
+              combustionCoPpm: coPpm,
+              combustionCo2Percent: co2Percent,
+              safetyDeviceCorrect: safDev,
+              ventilationSatisfactory: ventSatis,
+              visualPass: visPass,
+              tightnessPass: tightPass,
+              technicianActionRequired: declaredDanger,
+              warningSeverity: calculatedSeverity,
+              comments: checklist.comments || checklist.notes || prev.comments,
+            };
+          });
         }
 
         if (Array.isArray(parsed)) {
