@@ -1,0 +1,6 @@
+{
+  "name": "Remix: Robotics Spatial Understanding",
+  "description": "An interactive demo of how Gemini provides robots with critical spatial understanding.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": []
+}
