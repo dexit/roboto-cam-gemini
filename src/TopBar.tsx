@@ -11,13 +11,17 @@ export function TopBar() {
   const [theme, setTheme] = useAtom(ThemeAtom);
 
   return (
-    <div className="flex w-full items-center px-3 py-2 border-b justify-between">
-      <div className="flex gap-3 items-center">
+    <div className="flex w-full items-center px-4 py-3 border-b justify-between bg-zinc-900 text-white">
+      <div className="flex gap-4 items-center">
+        <span className="font-bold tracking-wider text-amber-400 text-sm flex items-center gap-1.5 uppercase font-mono">
+          🚨 Gas Safe Specialist Field Companion
+        </span>
+        <span className="text-zinc-500 font-mono text-[11px] hidden sm:inline">|</span>
         <button
           onClick={() => {
             resetState();
           }}
-          className="!p-0 !border-none underline bg-transparent"
+          className="!p-0 !border-none underline text-zinc-300 hover:text-white bg-transparent font-mono text-xs"
           style={{
             minHeight: '0',
           }}>

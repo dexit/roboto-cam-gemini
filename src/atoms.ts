@@ -73,3 +73,38 @@ export const OpenRouterCustomKeyAtom = atom<string>(
 export const IsWebcamModeAtom = atom<boolean>(false);
 export const StreamingActiveAtom = atom<boolean>(false);
 export const StreamIntervalAtom = atom<number>(3000);
+
+export interface GasSafeFormData {
+  applianceMake: string;
+  applianceModel: string;
+  operatingPressure: string;
+  flueIntegrityPass: boolean;
+  combustionCoPpm: string;
+  combustionCo2Percent: string;
+  safetyDeviceCorrect: boolean;
+  ventilationSatisfactory: boolean;
+  visualPass: boolean;
+  tightnessPass: boolean;
+  engineerName: string;
+  engineerLicense: string;
+  comments: string;
+  technicianActionRequired: boolean;
+}
+
+export const GasSafeFormAtom = atom<GasSafeFormData>({
+  applianceMake: 'Worcester Bosch',
+  applianceModel: 'Greenstar 30i',
+  operatingPressure: '1.4',
+  flueIntegrityPass: true,
+  combustionCoPpm: '8',
+  combustionCo2Percent: '9.1',
+  safetyDeviceCorrect: true,
+  ventilationSatisfactory: true,
+  visualPass: true,
+  tightnessPass: true,
+  engineerName: 'Rihards Mantejs',
+  engineerLicense: 'GASSAFE-788291',
+  comments: 'All gas pressures stable. Ventilation clear.',
+  technicianActionRequired: false,
+});
+

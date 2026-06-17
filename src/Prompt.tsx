@@ -23,6 +23,7 @@ import {
   IsWebcamModeAtom,
   StreamingActiveAtom,
   StreamIntervalAtom,
+  GasSafeFormAtom,
 } from './atoms';
 import {lineOptions} from './consts';
 import {DetectTypes} from './Types';
@@ -34,22 +35,34 @@ const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY || ''});
 const getRoboticsPrompt = (type: DetectTypes, target: string) => {
   switch (type) {
     case '2D bounding boxes':
-      return `Task: Detect ${target || 'items'}.
-Return a JSON array of objects.
-Each object must have:
-- "box_2d": [ymin, xmin, ymax, xmax] (coordinates 0-1000)
-- "label": text label
-Example: [{"box_2d": [100, 200, 300, 400], "label": "${target || 'item'}"}]
-Avoid points. Return ONLY the JSON.`;
+      return `Identify boiler components and populate the Gas Safe Checklist fields.
+Return a structured JSON object containing:
+1. An array of "items" with each item containing:
+   - "box_2d": [ymin, xmin, ymax, xmax] (coordinates normalized to 0-1000)
+   - "label": element name (e.g. "heat exchanger", "pressure gauge", "gas valve")
+2. A "gas_safe_checklist" object containing properties:
+   - "applianceMake": Detected brand of boiler (e.g. Worcester Bosch, Baxi, Ideal, Vaillant)
+   - "applianceModel": Approximate model name
+   - "operatingPressure": operating pressure in bars as string (e.g., "1.4 bar")
+   - "flueIntegrityPass": boolean (true/false) based on visible flue connection stability
+   - "combustionCoPpm": estimated CO level string or ppm (e.g., "6 ppm")
+   - "combustionCo2Percent": CO2 ratio percentage string (e.g. "9.2%")
+   - "safetyDeviceCorrect": boolean (true/false)
+   - "ventilationSatisfactory": boolean (true/false)
+   - "visualPass": boolean (true/false)
+   - "tightnessPass": boolean (true/false)
+   - "technicianActionRequired": boolean (true/false)
+   - "comments": a brief technician assessment summary.
+Return ONLY valid raw JSON without any markdown formatting.`;
 
     case 'Points':
-      return `Task: Point to ${target || 'items'}.
-Return a JSON array of objects.
-Each object must have:
-- "point": [y, x] (coordinates 0-1000)
-- "label": text label
-Example: [{"point": [500, 500], "label": "${target || 'item'}"}]
-Return ONLY the JSON.`;
+      return `Identify critical inspection points on the boiler.
+Return a structured JSON object containing:
+1. An array of "items" with each item containing:
+   - "point": [y, x] (coordinates normalized to 0-1000)
+   - "label": part name (e.g. "gas valve testing point", "pressure relief valve")
+2. A "gas_safe_checklist" object containing fields: applianceMake, applianceModel, operatingPressure (e.g., "1.5 bar"), flueIntegrityPass (true), combustionCoPpm (8), combustionCo2Percent ("9.0%"), safetyDeviceCorrect (true), ventilationSatisfactory (true), visualPass (true), tightnessPass (true), comments.
+Return ONLY valid JSON.`;
 
     default:
       return target || 'items';
@@ -75,6 +88,7 @@ export function Prompt() {
   const [, setRequestJson] = useAtom(RequestJsonAtom);
   const [, setResponseJson] = useAtom(ResponseJsonAtom);
   const [responseTime, setResponseTime] = useState<string | null>(null);
+  const [, setGasSafeForm] = useAtom(GasSafeFormAtom);
 
   // New multi-provider atoms
   const [provider, setProvider] = useAtom(AIProviderAtom);
@@ -368,6 +382,26 @@ Format your final reply strictly as a JSON array under markdown code block:
         const parsed = JSON.parse(repaired);
         setResponseJson(JSON.stringify(parsed, null, 2));
 
+        // Auto-fill Gas Safe Form from response fields
+        const checklist = parsed.gas_safe_checklist || parsed.checklist || parsed;
+        if (checklist && typeof checklist === 'object' && !Array.isArray(checklist)) {
+          setGasSafeForm((prev) => ({
+            ...prev,
+            applianceMake: checklist.applianceMake || checklist.make || prev.applianceMake,
+            applianceModel: checklist.applianceModel || checklist.model || prev.applianceModel,
+            operatingPressure: checklist.operatingPressure !== undefined ? String(checklist.operatingPressure) : prev.operatingPressure,
+            flueIntegrityPass: checklist.flueIntegrityPass !== undefined ? Boolean(checklist.flueIntegrityPass) : prev.flueIntegrityPass,
+            combustionCoPpm: checklist.combustionCoPpm !== undefined ? String(checklist.combustionCoPpm) : prev.combustionCoPpm,
+            combustionCo2Percent: checklist.combustionCo2Percent !== undefined ? String(checklist.combustionCo2Percent) : prev.combustionCo2Percent,
+            safetyDeviceCorrect: checklist.safetyDeviceCorrect !== undefined ? Boolean(checklist.safetyDeviceCorrect) : prev.safetyDeviceCorrect,
+            ventilationSatisfactory: checklist.ventilationSatisfactory !== undefined ? Boolean(checklist.ventilationSatisfactory) : prev.ventilationSatisfactory,
+            visualPass: checklist.visualPass !== undefined ? Boolean(checklist.visualPass) : prev.visualPass,
+            tightnessPass: checklist.tightnessPass !== undefined ? Boolean(checklist.tightnessPass) : prev.tightnessPass,
+            technicianActionRequired: checklist.technicianActionRequired !== undefined ? Boolean(checklist.technicianActionRequired) : prev.technicianActionRequired,
+            comments: checklist.comments || checklist.notes || prev.comments,
+          }));
+        }
+
         if (Array.isArray(parsed)) {
           parsedResponse = parsed;
         } else if (parsed && typeof parsed === 'object') {
@@ -380,7 +414,8 @@ Format your final reply strictly as a JSON array under markdown code block:
           if (Array.isArray(possibleArray)) {
             parsedResponse = possibleArray;
           } else {
-            throw new Error('No list structure detected in JSON fields.');
+            // Check if items list exists as a sub-property inside parsed
+            parsedResponse = [];
           }
         }
       } catch (e: any) {

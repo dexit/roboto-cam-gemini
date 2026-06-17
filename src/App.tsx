@@ -7,39 +7,8 @@ import {ExtraModeControls} from './ExtraModeControls';
 import {Prompt} from './Prompt';
 import {SideControls} from './SideControls';
 import {TopBar} from './TopBar';
-import {InitFinishedAtom, RequestJsonAtom, ResponseJsonAtom, ThemeAtom} from './atoms';
-
-function JsonDisplay() {
-  const [requestJson] = useAtom(RequestJsonAtom);
-  const [responseJson] = useAtom(ResponseJsonAtom);
-
-  return (
-    <div className="flex flex-col w-1/2 p-4 gap-4 overflow-auto border-l h-full">
-      <div className="flex flex-col h-1/2">
-        <h2 className="text-sm font-bold mb-2 uppercase shrink-0">
-          API Request
-        </h2>
-        <pre
-          className="bg-[var(--input-color)] p-2 rounded-md overflow-auto text-xs grow"
-          aria-live="polite">
-          <code>
-            {requestJson || 'Send a request to see the API call details here.'}
-          </code>
-        </pre>
-      </div>
-      <div className="flex flex-col h-1/2">
-        <h2 className="text-sm font-bold mb-2 uppercase shrink-0">
-          API Response
-        </h2>
-        <pre
-          className="bg-[var(--input-color)] p-2 rounded-md overflow-auto text-xs grow"
-          aria-live="polite">
-          <code>{responseJson}</code>
-        </pre>
-      </div>
-    </div>
-  );
-}
+import {GasSafeForm} from './GasSafeForm';
+import {InitFinishedAtom, ThemeAtom} from './atoms';
 
 function App() {
   const [initFinished] = useAtom(InitFinishedAtom);
@@ -59,7 +28,7 @@ function App() {
         <TopBar />
         <div className="flex grow overflow-hidden">
           {initFinished ? <Content /> : null}
-          <JsonDisplay />
+          <GasSafeForm />
         </div>
         <ExtraModeControls />
       </div>

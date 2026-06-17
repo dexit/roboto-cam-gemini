@@ -20,19 +20,11 @@ export const segmentationColors = [];
 export const segmentationColorsRgb: number[][] = [];
 
 export const imageOptions: string[] = [
-  'aloha-arms-table.png',
-  'cart.png',
-  'mango.png',
-  'gameboard.png',
-  'aloha_desk.png',
-  'soarm-block.png',
-  'top-down-fruits.png',
-  'aloha-arms-trash.jpg',
-  'grapes.png',
-].map(
-  (i) =>
-    `https://storage.googleapis.com/generativeai-downloads/images/robotics/applet-robotics-spatial-understanding/${i}`,
-);
+  'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800', // Gauges & Piping
+  'https://images.unsplash.com/photo-1581094288338-2314dddb7ecc?auto=format&fit=crop&q=80&w=800', // Control Panel / Dial
+  'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800', // Home boiler
+  'https://images.unsplash.com/photo-1605647540924-852290f6b0d5?auto=format&fit=crop&q=80&w=800', // Closed circuit dial
+];
 
 export const lineOptions = {
   size: 8,
@@ -44,14 +36,14 @@ export const lineOptions = {
 
 export const defaultPromptParts = {
   '2D bounding boxes': [
-    'Show me the positions of',
-    'items',
-    'as a JSON list. Do not return masks. Limit to 25 items.',
+    'Detect boiler parts: pressure gauge, gas valve, flue interface, expansion vessel, water pump, thermostat controllers',
+    'and format as JSON list.',
+    'Also include a root "gas_safe_checklist" object in your JSON containing properties: applianceMake, applianceModel, operatingPressure (bar as string, e.g., "1.4 bar"), flueIntegrityPass (boolean), combustionCoPpm (string/number), safetyDeviceCorrect (boolean), ventilationSatisfactory (boolean), visualPass (boolean), tightnessPass (boolean), and technicianActionRequired (boolean).'
   ],
   Points: [
-    'Point to the',
-    'items',
-    ' with no more than 10 items. The answer should follow the json format: [{"point": <point>, "label": <label1>}, ...]. The points are in [y, x] format normalized to 0-1000.',
+    'Point to pressure dials, safety switches, and gas inlet pipes. Provide a JSON array with point coordinates in format [y, x] from 0-1000 and label, accompanied by a "gas_safe_checklist" summary object.',
+    '',
+    ''
   ],
 };
 
