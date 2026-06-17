@@ -70,6 +70,9 @@ export const OpenRouterModelAtom = atom<string>('google/gemini-2.5-flash:free');
 export const OpenRouterCustomKeyAtom = atom<string>(
   typeof window !== 'undefined' ? (localStorage.getItem('openrouter_custom_key') || '') : ''
 );
+export const GeminiCustomKeyAtom = atom<string>(
+  typeof window !== 'undefined' ? (localStorage.getItem('gemini_custom_key') || '') : ''
+);
 export const IsWebcamModeAtom = atom<boolean>(false);
 export const StreamingActiveAtom = atom<boolean>(false);
 export const StreamIntervalAtom = atom<number>(3000);

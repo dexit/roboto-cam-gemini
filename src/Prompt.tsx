@@ -20,6 +20,7 @@ import {
   AIProviderAtom,
   OpenRouterModelAtom,
   OpenRouterCustomKeyAtom,
+  GeminiCustomKeyAtom,
   IsWebcamModeAtom,
   StreamingActiveAtom,
   StreamIntervalAtom,
@@ -29,7 +30,6 @@ import {lineOptions} from './consts';
 import {DetectTypes} from './Types';
 import {getSvgPathFromStroke, loadImage} from './utils';
 
-const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY || ''});
 
 // Helper to determine the best prompt for the robotics model
 const getRoboticsPrompt = (type: DetectTypes, target: string) => {
@@ -94,6 +94,7 @@ export function Prompt() {
   const [provider, setProvider] = useAtom(AIProviderAtom);
   const [openRouterModel, setOpenRouterModel] = useAtom(OpenRouterModelAtom);
   const [openRouterKey, setOpenRouterKey] = useAtom(OpenRouterCustomKeyAtom);
+  const [geminiKey, setGeminiKey] = useAtom(GeminiCustomKeyAtom);
   const [isWebcamMode] = useAtom(IsWebcamModeAtom);
   const [streamingActive, setStreamingActive] = useAtom(StreamingActiveAtom);
   const [streamInterval] = useAtom(StreamIntervalAtom);
@@ -137,6 +138,13 @@ export function Prompt() {
     const val = e.target.value;
     setOpenRouterKey(val);
     localStorage.setItem('openrouter_custom_key', val);
+  };
+
+  // Save customized Gemini key to localStorage when updated
+  const handleGeminiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setGeminiKey(val);
+    localStorage.setItem('gemini_custom_key', val);
   };
 
   async function handleSend() {
@@ -250,11 +258,13 @@ export function Prompt() {
         displayPayload.contents.parts[0].inlineData.data = '<BASE64_IMAGE_DATA_REDACTED>';
         setRequestJson(JSON.stringify(displayPayload, null, 2));
 
-        if (!process.env.GEMINI_API_KEY) {
-          throw new Error('GEMINI_API_KEY is missing in your secrets or .env. Required for Gemini core.');
+        const apiKeyToUse = geminiKey || process.env.GEMINI_API_KEY;
+        if (!apiKeyToUse) {
+          throw new Error('Gemini API Key is missing. Please configure it in your Gemini Settings panel or project .env.');
         }
 
-        const genAIResponse = await ai.models.generateContent(requestPayload);
+        const dynamicAi = new GoogleGenAI({apiKey: apiKeyToUse});
+        const genAIResponse = await dynamicAi.models.generateContent(requestPayload);
         responseText = genAIResponse.text || '';
 
       } else if (provider === 'openrouter') {
@@ -569,6 +579,22 @@ Format your final reply strictly as a JSON array under markdown code block:
               </label>
               <p className="text-[11px] text-[var(--text-color-secondary)] leading-relaxed">
                 Thinking assists reasoning for complex multi-object tasks but adds latency. Recommended off for real-time tracking loops.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1 border-t pt-2 mt-1">
+              <label className="text-[11px] font-bold text-[var(--text-color-secondary)] uppercase">
+                Gemini API Key:
+              </label>
+              <input
+                type="password"
+                placeholder="Paste Gemini key if missing, e.g., AIzaSy..."
+                value={geminiKey}
+                onChange={handleGeminiKeyChange}
+                className="bg-[var(--bg-color)] border border-[var(--border-color)] rounded p-1 text-xs w-full font-mono focus:outline-none"
+              />
+              <p className="text-[10px] text-[var(--text-color-secondary)]">
+                API Key is stored locally in your browser. Leaving it blank defaults to the server-configured <code className="bg-zinc-200 px-1">GEMINI_API_KEY</code> environment variable.
               </p>
             </div>
           </div>
